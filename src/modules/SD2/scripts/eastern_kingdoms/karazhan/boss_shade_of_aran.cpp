@@ -103,6 +103,7 @@ struct boss_aranAI : public ScriptedAI
     boss_aranAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		m_bIntroDone=false;
         Reset();
     }
 
@@ -122,6 +123,8 @@ struct boss_aranAI : public ScriptedAI
     bool m_bElementalsSpawned;
     bool m_bIsDrinking;
     bool m_bDrinkInturrupted;
+	 
+	bool m_bIntroDone;
 
     void Reset() override
     {
@@ -142,6 +145,17 @@ struct boss_aranAI : public ScriptedAI
         SetCombatMovement(true);
     }
 
+	void MoveInLineOfSight(Unit* pWho) override
+    {
+        if (!m_bIntroDone && m_creature->IsWithinDistInMap(pWho, 33.0f) &&(pWho->HasAura(28142) ||( pWho->HasAura(28143) || pWho->HasAura(28144) || pWho->HasAura(28145) ) ) )
+        {
+            DoScriptText(SAY_ATIESH, m_creature);
+            m_bIntroDone = true;
+        }
+        ScriptedAI::MoveInLineOfSight(pWho);
+    }
+
+	
     void KilledUnit(Unit* /*pVictim*/) override
     {
         DoScriptText(urand(0, 1) ? SAY_KILL1 : SAY_KILL2, m_creature);
@@ -166,7 +180,7 @@ struct boss_aranAI : public ScriptedAI
             case 1: DoScriptText(SAY_AGGRO2, m_creature); break;
             case 2: DoScriptText(SAY_AGGRO3, m_creature); break;
         }
-
+		
         if (m_pInstance)
         { m_pInstance->SetData(TYPE_ARAN, IN_PROGRESS); }
     }
